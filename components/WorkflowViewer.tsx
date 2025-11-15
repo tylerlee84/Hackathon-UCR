@@ -105,13 +105,13 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({ workflow }) => {
             </marker>
         </defs>
         {/* Fix: Use Object.keys to iterate over connections to ensure connData is correctly typed. */}
-        {Object.keys(workflow.connections).map(sourceName => {
+        {Object.keys(workflow.connections).map((sourceName) => {
           const sourceNode = nodeMap.get(sourceName);
           if (!sourceNode) return null;
           
           const connData = workflow.connections[sourceName];
-          // FIX: Explicitly type allConnections to fix type inference issues with .flat()
-          const allConnections: ConnectionNode[] = [...(connData.main || []), ...(connData.tool || [])].flat();
+          // FIX: Refactor flattening logic using reduce for more robust type inference, resolving issues with .flat() in some TS environments.
+          const allConnections = [...(connData.main || []), ...(connData.tool || [])].reduce<ConnectionNode[]>((acc, val) => acc.concat(val), []);
 
           return allConnections.map((target, index) => {
             const targetNode = nodeMap.get(target.node);

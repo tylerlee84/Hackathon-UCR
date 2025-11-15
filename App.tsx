@@ -2,8 +2,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
-import { WorkflowViewer } from './components/WorkflowViewer';
+import { AgentViewer } from './components/AgentViewer';
 import { OnboardingChat } from './components/OnboardingChat';
+import { ToolRunner } from './components/ToolRunner';
 import { WORKFLOWS } from './constants';
 import type { Workflow, UserProfile } from './types';
 
@@ -56,7 +57,13 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (currentView) {
       case 'workflow':
-        return selectedWorkflow ? <WorkflowViewer workflow={selectedWorkflow} /> : <div className="p-8 text-center">Select a workflow to view.</div>;
+        if (selectedWorkflow) {
+          if (selectedWorkflow.id.startsWith('tool-')) {
+            return <ToolRunner workflow={selectedWorkflow} />;
+          }
+          return <AgentViewer workflow={selectedWorkflow} />;
+        }
+        return <div className="p-8 text-center">Select a workflow to view.</div>;
       case 'onboarding':
         return <OnboardingChat onOnboardingComplete={handleOnboardingComplete} />;
       case 'dashboard':

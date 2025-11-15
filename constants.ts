@@ -1,6 +1,42 @@
 import type { Workflow } from './types';
-import { CalendarDaysIcon, ChatBubbleLeftRightIcon, CodeBracketIcon, DocumentTextIcon, MagnifyingGlassIcon, UserCircleIcon, Cog6ToothIcon, PaperAirplaneIcon, SparklesIcon, ShareIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 import React from 'react';
+// Fix: Add heroicons imports and define NODE_STYLE_MAP for use in Node.tsx
+import {
+  PlayIcon,
+  CalendarIcon,
+  CodeBracketIcon,
+  CloudIcon,
+  GlobeAltIcon,
+  ArrowsRightLeftIcon,
+  ArrowUturnLeftIcon,
+  CpuChipIcon,
+  WrenchScrewdriverIcon,
+  SparklesIcon,
+  VariableIcon,
+  ClockIcon,
+  CommandLineIcon,
+  ChatBubbleBottomCenterTextIcon
+} from '@heroicons/react/24/solid';
+
+export const NODE_STYLE_MAP: { [key: string]: { icon: React.ElementType; color: string; } } = {
+  'n8n-nodes-base.manualTrigger': { icon: PlayIcon, color: 'green' },
+  'n8n-nodes-base.executeWorkflowTrigger': { icon: PlayIcon, color: 'green' },
+  'n8n-nodes-base.googleCalendar': { icon: CalendarIcon, color: 'blue' },
+  'n8n-nodes-base.code': { icon: CodeBracketIcon, color: 'yellow' },
+  'n8n-nodes-base.microsoftOutlook': { icon: CloudIcon, color: 'blue' },
+  'n8n-nodes-base.httpRequest': { icon: GlobeAltIcon, color: 'indigo' },
+  'n8n-nodes-base.merge': { icon: ArrowsRightLeftIcon, color: 'purple' },
+  'n8n-nodes-base.respondToWebhook': { icon: ArrowUturnLeftIcon, color: 'gray' },
+  '@n8n/n8n-nodes-langchain.tool': { icon: WrenchScrewdriverIcon, color: 'cyan' },
+  '@n8n/n8n-nodes-langchain.agent': { icon: SparklesIcon, color: 'fuchsia' },
+  'n8n-nodes-base.set': { icon: VariableIcon, color: 'yellow' },
+  'n8n-nodes-base.cron': { icon: ClockIcon, color: 'indigo' },
+  'n8n-nodes-base.wait': { icon: ClockIcon, color: 'gray' },
+  '@google/n8n-nodes-gemini.chat': { icon: ChatBubbleBottomCenterTextIcon, color: 'green' },
+  'n8n-nodes-base.executeWorkflow': { icon: CommandLineIcon, color: 'cyan' },
+  'default': { icon: CpuChipIcon, color: 'gray' },
+};
+
 
 // NOTE: In a real app, this data would come from an API.
 // For this self-contained example, we embed the JSON data here.
@@ -55,6 +91,7 @@ const TOOL_RESEARCH_AGENT: Workflow = {
 const TOOL_CREATE_CALENDAR_EVENT: Workflow = {
   "name": "tool-create_calendar_event",
   "id": "tool-create_calendar_event",
+  "meta": { "description": "A tool to create a new event in the user's Google Calendar based on provided details." },
   "nodes": [
     { "parameters": {}, "id": "2d8adf70-8d26-487b-9a52-353a1a211a6b", "name": "Execute Workflow Trigger", "type": "n8n-nodes-base.executeWorkflowTrigger", "typeVersion": 1, "position": [0, 300] },
     { "parameters": { "keepOnlySet": false, "values": { "string": [{ "name": "user_id", "value": "={{$json.user_id}}" }, { "name": "title", "value": "={{$json.title}}" }, { "name": "start_time_iso", "value": "={{$json.start_time_iso}}" }, { "name": "end_time_iso", "value": "={{$json.end_time_iso}}" }] }, "options": {} }, "id": "4f2acb57-5b55-4a8d-9a4c-f5d52c96a3ce", "name": "Set Event Details", "type": "n8n-nodes-base.set", "typeVersion": 2, "position": [240, 180] },
@@ -77,6 +114,7 @@ const TOOL_CREATE_CALENDAR_EVENT: Workflow = {
 const TOOL_GET_NEWS: Workflow = {
   "name": "tool-get_news",
   "id": "tool-get_news",
+  "meta": { "description": "Fetches the latest news headlines from Hacker News based on a query." },
   "nodes": [
     { "parameters": {}, "id": "f6d8b9c7-9a7b-4ce3-9f8e-04f6fd57f1c0", "name": "Execute Workflow Trigger", "type": "n8n-nodes-base.executeWorkflowTrigger", "typeVersion": 1, "position": [0, 300] },
     { "parameters": { "requestMethod": "GET", "url": "https://hn.algolia.com/api/v1/search", "jsonParameters": true, "queryParametersJson": "={\"query\": $json.query || 'technology', \"hitsPerPage\": 5}", "options": {} }, "id": "a15a1551-7a32-44c0-926f-4841a08fb4ba", "name": "Fetch Headlines", "type": "n8n-nodes-base.httpRequest", "typeVersion": 1, "position": [240, 300] },
@@ -130,6 +168,7 @@ const ONBOARDING_AGENT: Workflow = {
 const TOOL_SCRIBE_ASSISTANT: Workflow = {
   "name": "Tool - Scribe's Assistant",
   "id": "tool-scribe-assistant",
+  "meta": { "description": "Receives a topic, finds source material online, and summarizes it using a Gemini model." },
   "nodes": [
     {
       "parameters": { "notes": "Receives a { 'topic': '...' } to summarize." },
@@ -191,23 +230,3 @@ export const WORKFLOWS: Workflow[] = [
   TOOL_GET_NEWS,
   ONBOARDING_AGENT
 ];
-
-export const NODE_STYLE_MAP: { [key: string]: { icon: React.FC<any>; color: string } } = {
-  'n8n-nodes-base.manualTrigger': { icon: PaperAirplaneIcon, color: 'green' },
-  'n8n-nodes-base.cron': { icon: CalendarDaysIcon, color: 'green' },
-  'n8n-nodes-base.executeWorkflowTrigger': { icon: PaperAirplaneIcon, color: 'green' },
-  'n8n-nodes-base.googleCalendar': { icon: CalendarDaysIcon, color: 'blue' },
-  'n8n-nodes-base.microsoftOutlook': { icon: CalendarDaysIcon, color: 'blue' },
-  'n8n-nodes-base.httpRequest': { icon: GlobeAltIcon, color: 'blue' },
-  'n8n-nodes-base.code': { icon: CodeBracketIcon, color: 'yellow' },
-  'n8n-nodes-base.set': { icon: Cog6ToothIcon, color: 'yellow' },
-  'n8n-nodes-base.merge': { icon: ShareIcon, color: 'yellow' },
-  'n8n-nodes-base.respondToWebhook': { icon: PaperAirplaneIcon, color: 'purple' },
-  'n8n-nodes-base.executeWorkflow': { icon: Cog6ToothIcon, color: 'indigo' },
-  '@n8n/n8n-nodes-langchain.tool': { icon: MagnifyingGlassIcon, color: 'cyan' },
-  '@n8n/n8n-nodes-langchain.agent': { icon: SparklesIcon, color: 'fuchsia' },
-  '@google/n8n-nodes-gemini.chat': { icon: SparklesIcon, color: 'fuchsia' },
-// Fix: Add a type for 'n8n-nodes-base.wait' to avoid falling back to default
-  'n8n-nodes-base.wait': { icon: ChatBubbleLeftRightIcon, color: 'purple' },
-  'default': { icon: Cog6ToothIcon, color: 'gray' },
-};
