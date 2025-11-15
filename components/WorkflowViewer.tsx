@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 // Fix: Import Connections type to correctly type connection data.
-import type { Workflow, Node as WorkflowNode, Connections } from '../types';
+import type { Workflow, Node as WorkflowNode, Connections, ConnectionNode } from '../types';
 import { Node } from './Node';
 import { Connection } from './Connection';
 
@@ -104,13 +104,14 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({ workflow }) => {
                 <polygon points="0 0, 10 3.5, 0 7" className="fill-current text-gray-500" />
             </marker>
         </defs>
-        {Object.entries(workflow.connections).map(([sourceName, connData]) => {
+        {/* Fix: Use Object.keys to iterate over connections to ensure connData is correctly typed. */}
+        {Object.keys(workflow.connections).map(sourceName => {
           const sourceNode = nodeMap.get(sourceName);
           if (!sourceNode) return null;
           
-          // Fix: Cast connData to its correct type to resolve type inference issues with Object.entries.
-          const typedConnData = connData as Connections[string];
-          const allConnections = [...(typedConnData.main || []), ...(typedConnData.tool || [])].flat();
+          const connData = workflow.connections[sourceName];
+          // FIX: Explicitly type allConnections to fix type inference issues with .flat()
+          const allConnections: ConnectionNode[] = [...(connData.main || []), ...(connData.tool || [])].flat();
 
           return allConnections.map((target, index) => {
             const targetNode = nodeMap.get(target.node);

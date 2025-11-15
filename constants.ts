@@ -127,11 +127,66 @@ const ONBOARDING_AGENT: Workflow = {
     }
 };
 
+const TOOL_SCRIBE_ASSISTANT: Workflow = {
+  "name": "Tool - Scribe's Assistant",
+  "id": "tool-scribe-assistant",
+  "nodes": [
+    {
+      "parameters": { "notes": "Receives a { 'topic': '...' } to summarize." },
+      "id": "scribe-trigger",
+      "name": "Scribe Request",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": { "toolType": "duckduckgoSearch", "query": "={{$json.topic}}" },
+      "id": "scribe-search",
+      "name": "Find Source Material",
+      "type": "@n8n/n8n-nodes-langchain.tool",
+      "typeVersion": 1,
+      "position": [350, 300]
+    },
+    {
+      "parameters": { "toolType": "webBrowser", "url": "={{ $('Find Source Material').item.json.link }}", "options": {"mode": "text"}},
+      "id": "scribe-read",
+      "name": "Read Papyrus",
+      "type": "@n8n/n8n-nodes-langchain.tool",
+      "typeVersion": 1,
+      "position": [600, 300]
+    },
+    {
+      "parameters": { "model": "gemini-pro", "prompt": "Summarize the following text for a scholar: {{$json.text}}" },
+      "id": "scribe-summarize",
+      "name": "Gemini Scribe",
+      "type": "@google/n8n-nodes-gemini.chat",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": { "functionCode": "return { json: { scroll_text: items[0].json.summary } }" },
+      "id": "scribe-format",
+      "name": "Format for Scroll",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1100, 300],
+      "notes": "This step is not yet connected."
+    }
+  ],
+  "connections": {
+    "Scribe Request": { "main": [[{ "node": "Find Source Material", "type": "main", "index": 0 }]] },
+    "Find Source Material": { "main": [[{ "node": "Read Papyrus", "type": "main", "index": 0 }]] },
+    "Read Papyrus": { "main": [[{ "node": "Gemini Scribe", "type": "main", "index": 0 }]] },
+    "Gemini Scribe": { "main": [] }
+  }
+};
+
 
 export const WORKFLOWS: Workflow[] = [
   AGENT_DAILY_SCHEDULER,
   GET_CALENDAR_STATE,
   TOOL_RESEARCH_AGENT,
+  TOOL_SCRIBE_ASSISTANT,
   TOOL_CREATE_CALENDAR_EVENT,
   TOOL_GET_NEWS,
   ONBOARDING_AGENT
@@ -151,6 +206,7 @@ export const NODE_STYLE_MAP: { [key: string]: { icon: React.FC<any>; color: stri
   'n8n-nodes-base.executeWorkflow': { icon: Cog6ToothIcon, color: 'indigo' },
   '@n8n/n8n-nodes-langchain.tool': { icon: MagnifyingGlassIcon, color: 'cyan' },
   '@n8n/n8n-nodes-langchain.agent': { icon: SparklesIcon, color: 'fuchsia' },
+  '@google/n8n-nodes-gemini.chat': { icon: SparklesIcon, color: 'fuchsia' },
 // Fix: Add a type for 'n8n-nodes-base.wait' to avoid falling back to default
   'n8n-nodes-base.wait': { icon: ChatBubbleLeftRightIcon, color: 'purple' },
   'default': { icon: Cog6ToothIcon, color: 'gray' },

@@ -1,21 +1,52 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { WorkflowViewer } from './components/WorkflowViewer';
 import { OnboardingChat } from './components/OnboardingChat';
 import { WORKFLOWS } from './constants';
-import type { Workflow } from './types';
+import type { Workflow, UserProfile } from './types';
 
 type View = 'dashboard' | 'workflow' | 'onboarding';
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<View>('dashboard');
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(() => {
+    try {
+      const savedProfile = localStorage.getItem('userProfile');
+      return savedProfile ? JSON.parse(savedProfile) : null;
+    } catch (error) {
+      console.error("Failed to parse user profile from localStorage", error);
+      return null;
+    }
+  });
+
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean>(() => {
+    return localStorage.getItem('onboardingComplete') === 'true';
+  });
+
+  const [currentView, setCurrentView] = useState<View>(isOnboardingComplete ? 'dashboard' : 'onboarding');
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
 
   const handleSelectWorkflow = (id: string) => {
     setSelectedWorkflowId(id);
     setCurrentView('workflow');
+  };
+  
+  const handleSetView = (view: View) => {
+    if (!isOnboardingComplete && view !== 'onboarding') {
+      // Keep user in onboarding if not complete, but allow them to re-select it
+      setCurrentView('onboarding');
+      return;
+    }
+    setCurrentView(view);
+  }
+
+  const handleOnboardingComplete = (profile: UserProfile) => {
+    setUserProfile(profile);
+    localStorage.setItem('userProfile', JSON.stringify(profile));
+    setIsOnboardingComplete(true);
+    localStorage.setItem('onboardingComplete', 'true');
+    setCurrentView('dashboard');
   };
 
   const selectedWorkflow = useMemo(() => {
@@ -27,10 +58,10 @@ const App: React.FC = () => {
       case 'workflow':
         return selectedWorkflow ? <WorkflowViewer workflow={selectedWorkflow} /> : <div className="p-8 text-center">Select a workflow to view.</div>;
       case 'onboarding':
-        return <OnboardingChat />;
+        return <OnboardingChat onOnboardingComplete={handleOnboardingComplete} />;
       case 'dashboard':
       default:
-        return <Dashboard />;
+        return <Dashboard userProfile={userProfile} />;
     }
   };
 
@@ -39,7 +70,7 @@ const App: React.FC = () => {
       <Sidebar 
         workflows={WORKFLOWS}
         onSelectWorkflow={handleSelectWorkflow}
-        onSetView={setCurrentView}
+        onSetView={handleSetView}
         currentView={currentView}
         selectedWorkflowId={selectedWorkflowId}
       />

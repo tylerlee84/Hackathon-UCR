@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { UserCircleIcon, FireIcon, ShieldCheckIcon, BookOpenIcon, SparklesIcon } from '@heroicons/react/24/solid';
+import type { UserProfile as UserProfileType } from '../types';
 
-const UserProfile = () => (
+const UserProfile: React.FC<{ profile: UserProfileType | null }> = ({ profile }) => (
     <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 flex items-center space-x-4">
         <div className="relative">
             <UserCircleIcon className="w-16 h-16 text-cyan-400" />
@@ -10,8 +11,8 @@ const UserProfile = () => (
         </div>
         <div>
             <h3 className="font-bold text-lg text-white font-orbitron">Adventurer</h3>
-            <p className="text-sm text-cyan-400">Adept of the Biotech, Life Science VC</p>
-            <p className="text-xs text-gray-400 mt-1">Quadrant: Hyper-Specific</p>
+            <p className="text-sm text-cyan-400">{profile?.passion || 'Adept of the Biotech, Life Science VC'}</p>
+            <p className="text-xs text-gray-400 mt-1">{profile ? `Quest: ${profile.story.substring(0, 40)}...` : 'Quadrant: Hyper-Specific'}</p>
         </div>
     </div>
 );
@@ -54,7 +55,7 @@ const OraclesRiddle = () => (
     </div>
 );
 
-export const Dashboard: React.FC = () => {
+export const Dashboard: React.FC<{ userProfile: UserProfileType | null }> = ({ userProfile }) => {
     return (
         <div className="p-4 sm:p-6 lg:p-8">
             <header className="mb-8">
@@ -63,7 +64,7 @@ export const Dashboard: React.FC = () => {
             </header>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-3">
-                    <UserProfile />
+                    <UserProfile profile={userProfile} />
                 </div>
                 <div className="lg:col-span-2">
                     <BountyBoard />

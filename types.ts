@@ -47,3 +47,10 @@ export interface ChatMessage {
   sender: 'user' | 'agent';
   text: string;
 }
+
+export interface UserProfile {
+  story: string;
+  passion: string;
+  ics: string;
+  rituals: string;
+}

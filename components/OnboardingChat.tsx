@@ -1,13 +1,15 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { PaperAirplaneIcon, UserIcon, SparklesIcon } from '@heroicons/react/24/solid';
-import { ChatMessage } from '../types';
-import { getOnboardingResponse } from '../services/geminiService';
+import { ChatMessage, UserProfile } from '../types';
+import { getOnboardingResponse, nextOnboardingState, OnboardingState } from '../services/geminiService';
 
-export const OnboardingChat: React.FC = () => {
+export const OnboardingChat: React.FC<{onOnboardingComplete: (profile: UserProfile) => void}> = ({ onOnboardingComplete }) => {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [userInput, setUserInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [conversationState, setConversationState] = useState<OnboardingState>('START');
+    const [profileData, setProfileData] = useState<Partial<UserProfile>>({});
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -18,16 +20,13 @@ export const OnboardingChat: React.FC = () => {
 
     useEffect(() => {
         // Start the conversation
-        const startConversation = async () => {
-            setIsLoading(true);
-            const initialMessage = await getOnboardingResponse('');
-            setMessages([initialMessage]);
-            setIsLoading(false);
-        };
-        startConversation();
+        setIsLoading(true);
+        setMessages([getOnboardingResponse('START')]);
+        setConversationState(nextOnboardingState['START']);
+        setIsLoading(false);
     }, []);
 
-    const handleSendMessage = async (e: React.FormEvent) => {
+    const handleSendMessage = async (e: React.FormEvent | React.KeyboardEvent) => {
         e.preventDefault();
         if (!userInput.trim() || isLoading) return;
 
@@ -38,14 +37,45 @@ export const OnboardingChat: React.FC = () => {
         };
         
         setMessages(prev => [...prev, userMessage]);
+        const currentInput = userInput;
         setUserInput('');
         setIsLoading(true);
 
-        // Simulate API call
-        setTimeout(async () => {
-            const agentResponse = await getOnboardingResponse(userInput);
+        // 1. Update profile data based on the question the user just answered
+        const updatedProfile = { ...profileData };
+        switch(conversationState) {
+            case 'AWAITING_STORY':
+                updatedProfile.story = currentInput;
+                break;
+            case 'AWAITING_PASSION':
+                updatedProfile.passion = currentInput;
+                break;
+            case 'AWAITING_ICS':
+                updatedProfile.ics = currentInput;
+                break;
+            case 'AWAITING_RITUALS':
+                updatedProfile.rituals = currentInput;
+                break;
+        }
+        setProfileData(updatedProfile);
+
+        // 2. Determine next state
+        const nextState = nextOnboardingState[conversationState];
+        
+        // 3. Get and show agent's response
+        setTimeout(() => {
+            const agentResponse = getOnboardingResponse(nextState);
             setMessages(prev => [...prev, agentResponse]);
             setIsLoading(false);
+            
+            // 4. Advance state for the *next* user input
+            setConversationState(nextState);
+
+            // 5. Check for completion
+            if (nextState === 'DONE') {
+                // Call complete with a small delay to allow the final message to be seen
+                setTimeout(() => onOnboardingComplete(updatedProfile as UserProfile), 2000);
+            }
         }, 1000);
     };
 
@@ -103,9 +133,9 @@ export const OnboardingChat: React.FC = () => {
                         placeholder="Speak with the registrar..."
                         className="flex-1 bg-transparent p-3 text-gray-200 focus:outline-none resize-none"
                         rows={1}
-                        disabled={isLoading}
+                        disabled={isLoading || conversationState === 'DONE'}
                     />
-                    <button type="submit" className="p-3 text-gray-400 hover:text-cyan-400 disabled:text-gray-600" disabled={isLoading || !userInput.trim()}>
+                    <button type="submit" className="p-3 text-gray-400 hover:text-cyan-400 disabled:text-gray-600" disabled={isLoading || !userInput.trim() || conversationState === 'DONE'}>
                         <PaperAirplaneIcon className="w-6 h-6" />
                     </button>
                 </div>
