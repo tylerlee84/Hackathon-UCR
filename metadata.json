@@ -1,0 +1,5 @@
+{
+  "name": "Dungeon.edu Agent Visualizer",
+  "description": "An interactive web application to visualize and interact with n8n agent workflows in a gamified, fantasy-themed UI. Explore agent prompts, view task scheduling, and simulate the user onboarding experience.",
+  "requestFramePermissions": []
+}
