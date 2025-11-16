@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { PaperAirplaneIcon, UserIcon, SparklesIcon, ArrowUpTrayIcon } from '@heroicons/react/24/solid';
+import { PaperAirplaneIcon, UserIcon, SparklesIcon } from '@heroicons/react/24/solid';
 import { ChatMessage, UserProfile } from '../types';
 import { getOnboardingResponse, nextOnboardingState, OnboardingState } from '../services/geminiService';
 
@@ -32,9 +32,7 @@ export const OnboardingChat: React.FC<{onOnboardingComplete: (profile: UserProfi
     const [isLoading, setIsLoading] = useState(false);
     const [conversationState, setConversationState] = useState<OnboardingState>('START');
     const [profileData, setProfileData] = useState<Partial<UserProfile>>({});
-    const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -52,22 +50,6 @@ export const OnboardingChat: React.FC<{onOnboardingComplete: (profile: UserProfi
         }, 500);
     }, []);
 
-    const proceedConversation = (updatedProfile: Partial<UserProfile>, nextStateOverride?: OnboardingState) => {
-        const nextState = nextStateOverride || nextOnboardingState[conversationState];
-        
-        setTimeout(() => {
-            const agentResponse = getOnboardingResponse(nextState);
-            setMessages(prev => [...prev, agentResponse]);
-            setIsLoading(false);
-            
-            setConversationState(nextState);
-
-            if (nextState === 'DONE') {
-                setTimeout(() => onOnboardingComplete(updatedProfile as UserProfile), 2000);
-            }
-        }, 1200);
-    };
-
     const handleSendMessage = async (e: React.FormEvent | React.KeyboardEvent) => {
         e.preventDefault();
         if (!userInput.trim() || isLoading) return;
@@ -83,6 +65,7 @@ export const OnboardingChat: React.FC<{onOnboardingComplete: (profile: UserProfi
         setUserInput('');
         setIsLoading(true);
 
+        // 1. Update profile data based on the question the user just answered
         const updatedProfile = { ...profileData };
         switch(conversationState) {
             case 'AWAITING_STORY':
@@ -91,90 +74,33 @@ export const OnboardingChat: React.FC<{onOnboardingComplete: (profile: UserProfi
             case 'AWAITING_PASSION':
                 updatedProfile.passion = currentInput;
                 break;
+            case 'AWAITING_ICS':
+                updatedProfile.ics = currentInput;
+                break;
             case 'AWAITING_RITUALS':
                 updatedProfile.rituals = currentInput;
                 break;
         }
         setProfileData(updatedProfile);
-        proceedConversation(updatedProfile);
-    };
 
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || isLoading) return;
-
-        const userMessage: ChatMessage = {
-            id: `user-${Date.now()}`,
-            sender: 'user',
-            text: `Uploaded: ${file.name}`,
-        };
+        // 2. Determine next state
+        const nextState = nextOnboardingState[conversationState];
         
-        setMessages(prev => [...prev, userMessage]);
-        setUploadedFileName(file.name);
-        setIsLoading(true);
+        // 3. Get and show agent's response
+        setTimeout(() => {
+            const agentResponse = getOnboardingResponse(nextState);
+            setMessages(prev => [...prev, agentResponse]);
+            setIsLoading(false);
+            
+            // 4. Advance state for the *next* user input
+            setConversationState(nextState);
 
-        const updatedProfile = { ...profileData, ics: file.name };
-        setProfileData(updatedProfile);
-        
-        proceedConversation(updatedProfile, 'AWAITING_RITUALS');
-    };
-
-    const renderInputArea = () => {
-        if (conversationState === 'DONE') {
-            return (
-                 <div className="text-center text-green-400 font-semibold p-3">
-                    Onboarding Complete.
-                </div>
-            );
-        }
-
-        if (conversationState === 'AWAITING_ICS') {
-            return (
-                <div className="flex items-center glass-pane rounded-lg p-2">
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileSelect}
-                        accept=".ics,text/calendar"
-                        className="hidden"
-                        disabled={isLoading}
-                    />
-                    <div className="flex-1 text-gray-400 pl-2 text-sm">
-                        {uploadedFileName || 'Upload your .ics calendar file.'}
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="p-2 text-gray-400 hover:text-cyan-400 disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
-                        disabled={isLoading}
-                    >
-                        <ArrowUpTrayIcon className="w-6 h-6" />
-                    </button>
-                </div>
-            );
-        }
-
-        return (
-            <form onSubmit={handleSendMessage} className="flex items-center glass-pane rounded-lg focus-within:ring-2 focus-within:ring-cyan-500 transition-all">
-                <textarea
-                    value={userInput}
-                    onChange={(e) => setUserInput(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                            handleSendMessage(e);
-                            e.preventDefault();
-                        }
-                    }}
-                    placeholder="Transmit message..."
-                    className="flex-1 bg-transparent p-3 text-gray-200 focus:outline-none resize-none"
-                    rows={1}
-                    disabled={isLoading}
-                />
-                <button type="submit" className="p-3 text-gray-400 hover:text-cyan-400 disabled:text-gray-600 disabled:cursor-not-allowed transition-colors" disabled={isLoading || !userInput.trim()}>
-                    <PaperAirplaneIcon className="w-6 h-6" />
-                </button>
-            </form>
-        );
+            // 5. Check for completion
+            if (nextState === 'DONE') {
+                // Call complete with a small delay to allow the final message to be seen
+                setTimeout(() => onOnboardingComplete(updatedProfile as UserProfile), 2000);
+            }
+        }, 1200);
     };
 
     return (
@@ -203,9 +129,27 @@ export const OnboardingChat: React.FC<{onOnboardingComplete: (profile: UserProfi
                 )}
                 <div ref={messagesEndRef} />
             </div>
-            <div className="mt-6">
-                {renderInputArea()}
-            </div>
+            <form onSubmit={handleSendMessage} className="mt-6">
+                <div className="flex items-center glass-pane rounded-lg focus-within:ring-2 focus-within:ring-cyan-500 transition-all">
+                    <textarea
+                        value={userInput}
+                        onChange={(e) => setUserInput(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                handleSendMessage(e);
+                                e.preventDefault();
+                            }
+                        }}
+                        placeholder="Transmit message..."
+                        className="flex-1 bg-transparent p-3 text-gray-200 focus:outline-none resize-none"
+                        rows={1}
+                        disabled={isLoading || conversationState === 'DONE'}
+                    />
+                    <button type="submit" className="p-3 text-gray-400 hover:text-cyan-400 disabled:text-gray-600 disabled:cursor-not-allowed transition-colors" disabled={isLoading || !userInput.trim() || conversationState === 'DONE'}>
+                        <PaperAirplaneIcon className="w-6 h-6" />
+                    </button>
+                </div>
+            </form>
         </div>
     );
 };
