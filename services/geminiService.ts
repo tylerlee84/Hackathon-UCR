@@ -18,7 +18,7 @@ Brief me on your professional status. (e.g., your major, your year, and your car
 
     'AWAITING_PASSION': `Affirmative. To integrate your directives and deadlines, I require access to your calendar data stream. 
     
-Please provide your secure iCal (.ics) link from your primary scheduling platform (e.g., Canvas, Google Calendar).`,
+Please upload your secure iCal (.ics) file from your primary scheduling platform (e.g., Canvas, Google Calendar).`,
 
     'AWAITING_ICS': `Data stream locked. Final query: What are your daily operational rituals? 
     

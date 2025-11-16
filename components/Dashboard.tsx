@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { UserCircleIcon, SparklesIcon, CalendarDaysIcon, GlobeAltIcon, ClockIcon } from '@heroicons/react/24/solid';
+import { UserCircleIcon, SparklesIcon, CalendarDaysIcon, GlobeAltIcon, ClockIcon, DocumentTextIcon } from '@heroicons/react/24/solid';
 import type { UserProfile as UserProfileType } from '../types';
+import { GoogleGenAI, Type } from '@google/genai';
 
 const UserProfile: React.FC<{ profile: UserProfileType | null }> = ({ profile }) => (
     <div className="glass-pane rounded-xl p-6 flex items-center space-x-6">
@@ -18,13 +19,13 @@ const UserProfile: React.FC<{ profile: UserProfileType | null }> = ({ profile })
     </div>
 );
 
-const SkeletonLoader: React.FC = () => (
+const SkeletonLoader: React.FC<{ count?: number }> = ({ count = 3 }) => (
     <div className="space-y-4 animate-pulse">
         <div className="h-4 bg-gray-700/50 rounded w-3/4"></div>
         <div className="space-y-3">
-            <div className="h-12 bg-gray-700/50 rounded-lg"></div>
-            <div className="h-12 bg-gray-700/50 rounded-lg"></div>
-            <div className="h-12 bg-gray-700/50 rounded-lg w-5/6"></div>
+            {Array.from({ length: count }).map((_, i) => (
+                <div key={i} className="h-12 bg-gray-700/50 rounded-lg"></div>
+            ))}
         </div>
     </div>
 );
@@ -32,17 +33,25 @@ const SkeletonLoader: React.FC = () => (
 const DailyBriefing: React.FC<{
     summary: string | null;
     events: any[];
+    suggestedTasks: any[];
     isLoading: boolean;
-}> = ({ summary, events, isLoading }) => (
+}> = ({ summary, events, suggestedTasks, isLoading }) => (
     <div className="glass-pane rounded-xl p-6 h-full">
-        <h3 className="font-bold text-lg mb-4 text-white font-orbitron flex items-center">
-            <CalendarDaysIcon className="w-5 h-5 mr-2 text-cyan-400" />
-            Daily Briefing
-        </h3>
+        <div className="flex items-center mb-4">
+            <DocumentTextIcon className="w-6 h-6 mr-3 text-cyan-400" />
+            <h3 className="font-bold text-lg text-white font-orbitron">
+                Daily Briefing
+            </h3>
+        </div>
         {isLoading ? <SkeletonLoader /> : (
             <div>
-                <p className="text-sm text-gray-300 mb-4 italic">{summary}</p>
-                <div className="space-y-3">
+                <p className="text-sm text-gray-300 mb-6 italic">{summary}</p>
+
+                <h4 className="font-semibold text-base mb-3 text-white flex items-center">
+                    <CalendarDaysIcon className="w-5 h-5 mr-2 text-cyan-400" />
+                    Scheduled Events
+                </h4>
+                <div className="space-y-3 mb-6">
                     {events.map((event, index) => (
                         <div key={index} className="bg-gray-900/50 p-3 rounded-lg flex items-center space-x-3 hover:bg-gray-800/60 transition-colors">
                             <div className="flex flex-col items-center justify-center w-20 text-center bg-black/20 p-1 rounded-md">
@@ -55,6 +64,19 @@ const DailyBriefing: React.FC<{
                                 <p className="text-xs text-gray-400 flex items-center mt-1"><ClockIcon className="w-3 h-3 mr-1" /> {event.source}</p>
                             </div>
                         </div>
+                    ))}
+                </div>
+
+                <h4 className="font-semibold text-base mb-3 text-white flex items-center">
+                    <SparklesIcon className="w-5 h-5 mr-2 text-fuchsia-400" />
+                    AI Suggested Tasks
+                </h4>
+                <div className="space-y-3">
+                    {suggestedTasks.map((task, index) => (
+                         <div key={index} className="bg-gray-900/50 p-3 rounded-lg group hover:bg-gray-700/50 transition-colors border-l-2 border-fuchsia-500/50">
+                             <h4 className="font-semibold text-sm text-white">{task.title}</h4>
+                             <p className="text-xs text-gray-400 mt-1">{task.reason}</p>
+                         </div>
                     ))}
                 </div>
             </div>
@@ -76,7 +98,7 @@ const NewsFeed: React.FC<{ articles: any[]; isLoading: boolean; }> = ({ articles
                          <p className="text-xs text-gray-500 mt-1 mb-2">{article.source}</p>
                          <div className="flex items-start text-xs text-gray-300 border-l-2 border-fuchsia-500/50 pl-2">
                              <SparklesIcon className="w-4 h-4 mr-1.5 flex-shrink-0 text-fuchsia-400" />
-                             <p><span className="font-bold text-fuchsia-400">Relevance Analysis:</span> {article.relevance}</p>
+                             <p><span className="font-bold text-fuchsia-400">Relevance:</span> {article.relevance}</p>
                          </div>
                     </div>
                 ))}
@@ -85,62 +107,122 @@ const NewsFeed: React.FC<{ articles: any[]; isLoading: boolean; }> = ({ articles
     </div>
 );
 
-const OraclesQuery = () => (
-    <div className="glass-pane rounded-xl p-6 text-center">
-        <h3 className="font-bold text-lg mb-2 text-white font-orbitron flex items-center justify-center"><SparklesIcon className="w-5 h-5 mr-2 text-fuchsia-400" />The Oracle's Query</h3>
-        <p className="text-gray-300 italic">"As you execute the 'Midterm' directive, calculate how this knowledge acquisition optimizes your core objective: 'Help as many people as possible on a wide-scale level'?"</p>
-    </div>
-);
-
 export const Dashboard: React.FC<{ userProfile: UserProfileType | null }> = ({ userProfile }) => {
     const [dailyBriefing, setDailyBriefing] = useState<{ summary: string | null; events: any[] }>({ summary: null, events: [] });
+    const [suggestedTasks, setSuggestedTasks] = useState<any[]>([]);
     const [newsArticles, setNewsArticles] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isBriefingLoading, setIsBriefingLoading] = useState(true);
+    const [isNewsLoading, setIsNewsLoading] = useState(true);
 
     useEffect(() => {
-        const fetchAndProcessData = async () => {
-            setIsLoading(true);
+        if (!userProfile) return;
 
-            // 1. Mock raw data fetching
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+        const fetchBriefing = async () => {
+            setIsBriefingLoading(true);
+
+            const passion = userProfile.passion;
+            const story = userProfile.story;
+            const rituals = userProfile.rituals;
+
+            // Mock existing events until ICS parsing is implemented
             const now = new Date();
             const mockEvents = [
-                { summary: 'Biomechanics Midterm', start: new Date(now).setHours(9, 0, 0), end: new Date(now).setHours(11, 0, 0), source: 'Canvas' },
-                { summary: 'Sync with Dr. Evans', start: new Date(now).setHours(13, 0, 0), end: new Date(now).setHours(13, 30, 0), source: 'Google Calendar' },
-                { summary: 'Materials Lab Report Prep', start: new Date(now).setHours(15, 0, 0), end: new Date(now).setHours(17, 0, 0), source: 'Todoist' },
+                { summary: 'Biomechanics Midterm', start: new Date(now.setHours(9, 0, 0)).toISOString(), end: new Date(now.setHours(11, 0, 0)).toISOString(), source: 'Canvas' },
+                { summary: 'Sync with Dr. Evans', start: new Date(now.setHours(13, 0, 0)).toISOString(), end: new Date(now.setHours(13, 30, 0)).toISOString(), source: 'Google Calendar' },
             ];
 
-            const mockArticles = [
-                { title: 'Bio-Signal Processing Startup Raises $50M Series A', source: 'TechCrunch', url: '#' },
-                { title: 'Top 5 Life Science VC Firms to Watch in 2024', source: 'VentureBeat', url: '#' },
-                { title: 'New CRISPR Technique Shows Promise in Gene Editing', source: 'ScienceDaily', url: '#' },
-            ];
+            const briefingPrompt = `Based on my user profile: Passion - ${passion}, Goal - ${story}, Daily Rituals - ${rituals}. And my current schedule today: ${JSON.stringify(mockEvents)}. Please generate a concise, encouraging, one-paragraph daily briefing summary and suggest 3 actionable tasks for a to-do list that will help me achieve my main goal. The tasks should be distinct from my existing calendar events and rituals.`;
 
-            // 2. Simulate Gemini API processing call after a delay
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            const briefingSchema = {
+                type: Type.OBJECT,
+                properties: {
+                    summary: { type: Type.STRING, description: "A short, one-paragraph summary for the day." },
+                    suggested_tasks: {
+                        type: Type.ARRAY,
+                        description: "A list of exactly 3 suggested tasks.",
+                        items: {
+                            type: Type.OBJECT,
+                            properties: {
+                                title: { type: Type.STRING, description: "The task title." },
+                                reason: { type: Type.STRING, description: "A brief reason why this task is important for the user's goal." },
+                            },
+                        },
+                    },
+                },
+                required: ["summary", "suggested_tasks"],
+            };
 
-            const passion = userProfile?.passion || 'Biotech, Life Science VC';
-            const story = userProfile?.story || 'Become a Technical Advisor for a VC firm';
-
-            // Gemini Simulation
-            const briefingSummary = `Operator, your schedule is optimized for peak performance. You have ${mockEvents.length} directives today. Key focus is on '${mockEvents[0].summary}' to advance your objective.`;
-
-            const processedArticles = mockArticles.map(article => {
-                let relevance = "General industry awareness.";
-                if (article.title.toLowerCase().includes('biotech') || article.title.toLowerCase().includes('crispr') || article.title.toLowerCase().includes('bio-signal')) {
-                    relevance = `Directly impacts your domain focus on '${passion}'. This development could influence future investment landscapes.`;
-                } else if (article.title.toLowerCase().includes('vc firm')) {
-                     relevance = `Crucial intel for your objective: '${story}'. Monitor key players and funding trends.`;
-                }
-                return { ...article, relevance };
-            });
-
-            // 3. Update state
-            setDailyBriefing({ summary: briefingSummary, events: mockEvents });
-            setNewsArticles(processedArticles);
-            setIsLoading(false);
+            try {
+                const response = await ai.models.generateContent({
+                    model: 'gemini-2.5-flash',
+                    contents: briefingPrompt,
+                    config: {
+                        responseMimeType: 'application/json',
+                        responseSchema: briefingSchema,
+                    },
+                });
+                
+                const data = JSON.parse(response.text);
+                setDailyBriefing({ summary: data.summary, events: mockEvents.map(e => ({...e, start: new Date(e.start), end: new Date(e.end)})) });
+                setSuggestedTasks(data.suggested_tasks || []);
+            } catch (error) {
+                console.error("Error fetching daily briefing:", error);
+                setDailyBriefing({ summary: "Could not generate briefing. An error occurred.", events: mockEvents.map(e => ({...e, start: new Date(e.start), end: new Date(e.end)})) });
+            } finally {
+                setIsBriefingLoading(false);
+            }
         };
 
-        fetchAndProcessData();
+        const fetchNews = async () => {
+            setIsNewsLoading(true);
+            const passion = userProfile.passion;
+            const story = userProfile.story;
+
+            const newsPrompt = `Acting as an intelligence analyst, find the 3 most recent and relevant articles for me based on my profile: I am passionate about "${passion}" and my goal is to "${story}". For each article, provide a title and a "relevance" analysis explaining in one sentence why it's critical for me. Format each as: "Title: [Title]\nRelevance: [Relevance Analysis]" separated by "---".`;
+
+            try {
+                const response = await ai.models.generateContent({
+                    model: 'gemini-2.5-flash',
+                    contents: newsPrompt,
+                    config: {
+                        tools: [{ googleSearch: {} }],
+                    },
+                });
+
+                const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+                const textResponse = response.text;
+                
+                const articles = textResponse.split('---').map((entry, index) => {
+                    const titleMatch = entry.match(/Title: (.*)/);
+                    const relevanceMatch = entry.match(/Relevance: (.*)/);
+                    
+                    if (titleMatch && relevanceMatch) {
+                        const sourceInfo = groundingChunks[index]?.web;
+                        return {
+                            title: titleMatch[1].trim(),
+                            relevance: relevanceMatch[1].trim(),
+                            url: sourceInfo?.uri || '#',
+                            source: sourceInfo?.title || new URL(sourceInfo?.uri || 'https://google.com').hostname,
+                        };
+                    }
+                    return null;
+                }).filter(Boolean);
+                
+                setNewsArticles(articles);
+
+            } catch (error) {
+                console.error("Error fetching news feed:", error);
+                setNewsArticles([{ title: "Could not fetch intel feed.", relevance: "An error occurred.", url: "#", source: "System" }]);
+            } finally {
+                setIsNewsLoading(false);
+            }
+        };
+
+        fetchBriefing();
+        fetchNews();
+
     }, [userProfile]);
 
     return (
@@ -154,13 +236,15 @@ export const Dashboard: React.FC<{ userProfile: UserProfileType | null }> = ({ u
                     <UserProfile profile={userProfile} />
                 </div>
                 <div className="lg:col-span-2">
-                    <DailyBriefing summary={dailyBriefing.summary} events={dailyBriefing.events} isLoading={isLoading} />
+                    <DailyBriefing 
+                        summary={dailyBriefing.summary} 
+                        events={dailyBriefing.events} 
+                        suggestedTasks={suggestedTasks}
+                        isLoading={isBriefingLoading} 
+                    />
                 </div>
                 <div>
-                    <NewsFeed articles={newsArticles} isLoading={isLoading} />
-                </div>
-                 <div className="lg:col-span-3">
-                    <OraclesQuery />
+                    <NewsFeed articles={newsArticles} isLoading={isNewsLoading} />
                 </div>
             </div>
         </div>

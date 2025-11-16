@@ -104,17 +104,18 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({ workflow }) => {
                 <polygon points="0 0, 10 3.5, 0 7" className="fill-current text-purple-400" />
             </marker>
         </defs>
-        {/* Fix: Use Object.keys to iterate over connections to ensure connData is correctly typed. */}
+        {/* Fix: Replaced .flat() with a typed .reduce() to create a strongly-typed array of connections. This resolves potential type inference issues where connection targets could be treated as 'unknown', causing errors when accessing their properties. */}
         {Object.keys(workflow.connections).map((sourceName) => {
           const sourceNode = nodeMap.get(sourceName);
           if (!sourceNode) return null;
-          
-          const connData = workflow.connections[sourceName];
-          // FIX: The original `reduce` logic to flatten connections can be tricky for TypeScript's type inference, leading to an `unknown` type. Using `.flat()` is more modern and has better type support.
-          const allConnections = [...(connData.main || []), ...(connData.tool || [])].flat();
 
-          // FIX: Explicitly type `target` as `ConnectionNode` to correct type inference issues with `.flat()` that can lead to an `unknown` type.
-          return allConnections.map((target: ConnectionNode, index) => {
+          const connData = workflow.connections[sourceName];
+          const allConnections = [...(connData.main || []), ...(connData.tool || [])].reduce<ConnectionNode[]>(
+            (acc, group) => acc.concat(group),
+            []
+          );
+
+          return allConnections.map((target, index) => {
             const targetNode = nodeMap.get(target.node);
             if (!targetNode) return null;
             return (
