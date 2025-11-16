@@ -71,8 +71,8 @@ const GET_CALENDAR_STATE: Workflow = {
   }
 };
 
-const TOOL_RESEARCH_AGENT: Workflow = {
-  "name": "Tool - Research Agent",
+const MODULE_RESEARCH_AGENT: Workflow = {
+  "name": "Module - Research Agent",
   "id": "tool-research_agent",
   "meta": { "description": "Specialist agent that researches a single topic and returns a Knowledge Packet." },
   "nodes": [
@@ -88,8 +88,8 @@ const TOOL_RESEARCH_AGENT: Workflow = {
   }
 };
 
-const TOOL_CREATE_CALENDAR_EVENT: Workflow = {
-  "name": "tool-create_calendar_event",
+const MODULE_CREATE_CALENDAR_EVENT: Workflow = {
+  "name": "Module - Create Calendar Event",
   "id": "tool-create_calendar_event",
   "meta": { "description": "A tool to create a new event in the user's Google Calendar based on provided details." },
   "nodes": [
@@ -111,8 +111,8 @@ const TOOL_CREATE_CALENDAR_EVENT: Workflow = {
   }
 };
 
-const TOOL_GET_NEWS: Workflow = {
-  "name": "tool-get_news",
+const MODULE_GET_NEWS: Workflow = {
+  "name": "Module - Get News",
   "id": "tool-get_news",
   "meta": { "description": "Fetches the latest news headlines from Hacker News based on a query." },
   "nodes": [
@@ -126,8 +126,8 @@ const TOOL_GET_NEWS: Workflow = {
   }
 };
 
-const AGENT_DAILY_SCHEDULER: Workflow = {
-  "name": "Agent - Daily Scheduler",
+const SAGA_CORE_AGENT: Workflow = {
+  "name": "Saga - Core Agent",
   "id": "agent-daily-scheduler",
   "nodes": [
     { "parameters": { "triggerTimes": [{ "hour": 5, "minute": 0 }] }, "id": "b6d97a12-1084-420d-a377-0f5482d94c6e", "name": "Daily Kickoff", "type": "n8n-nodes-base.cron", "typeVersion": 1, "position": [0, 0] },
@@ -135,22 +135,22 @@ const AGENT_DAILY_SCHEDULER: Workflow = {
     { "parameters": { "workflowId": "tool-create_calendar_event", "options": {} }, "id": "7fd7eebc-7a18-4a83-a2f7-4b26b4f1ee21", "name": "tool-create_calendar_event", "type": "n8n-nodes-base.executeWorkflow", "typeVersion": 1, "position": [260, -420] },
     { "parameters": { "workflowId": "tool-get_news", "options": {} }, "id": "8f1e7e56-02d4-43cf-98da-8a1999d8e9df", "name": "tool-get_news", "type": "n8n-nodes-base.executeWorkflow", "typeVersion": 1, "position": [260, -620] },
     { "parameters": { "workflowId": "tool-research_agent", "options": {} }, "id": "c64cf2f4-dedf-4cc3-b51c-05865b20f822", "name": "tool-research_agent", "type": "n8n-nodes-base.executeWorkflow", "typeVersion": 1, "position": [260, -820] },
-    { "parameters": { "agent": "openAiFunctionsAgent", "model": "gpt-4o-mini", "systemMessage": "...", "tools": [{ "name": "tool-get_calendar_events", "type": "workflow", "workflowId": "TCu4MAm8WdraO0tR" }, { "name": "tool-create_calendar_event", "type": "workflow", "workflowId": "tool-create_calendar_event" }, { "name": "tool-get_news", "type": "workflow", "workflowId": "tool-get_news" }, { "name": "tool-research_agent", "type": "workflow", "workflowId": "tool-research_agent" }] }, "id": "7ec0820c-5d37-4c19-8ae0-1ddcb05c2a4f", "name": "Dungeon Master Agent", "type": "@n8n/n8n-nodes-langchain.agent", "typeVersion": 1, "position": [520, 0] },
+    { "parameters": { "agent": "openAiFunctionsAgent", "model": "gpt-4o-mini", "systemMessage": "...", "tools": [{ "name": "tool-get_calendar_events", "type": "workflow", "workflowId": "TCu4MAm8WdraO0tR" }, { "name": "tool-create_calendar_event", "type": "workflow", "workflowId": "tool-create_calendar_event" }, { "name": "tool-get_news", "type": "workflow", "workflowId": "tool-get_news" }, { "name": "tool-research_agent", "type": "workflow", "workflowId": "tool-research_agent" }] }, "id": "7ec0820c-5d37-4c19-8ae0-1ddcb05c2a4f", "name": "Saga Core Agent", "type": "@n8n/n8n-nodes-langchain.agent", "typeVersion": 1, "position": [520, 0] },
     { "parameters": { "keepOnlySet": true, "values": { "json": [{ "name": "", "value": [{ "json": { "user_context": { "user_id": "tyler_lee_uci", "user_quadrant": "Hyper-Specific", "passionate_industry": "Biotech, Life Science VC", "specific_goal": "Technical Advisor for Life Science VC firm", "fundamental_question_medium": "Help as many people as possible on a wide-scale level", "ics_link": "https://canvas.uci.edu/...", "google_auth_token": "token_for_tyler" } } }, { "json": { "user_context": { "user_id": "sarah_chen_cal", "user_quadrant": "Passionate Major", "passionate_industry": "Game Design", "specific_goal": "Explore jobs at Riot Games", "fundamental_question_medium": "Build worlds that bring people joy", "ics_link": "https://calendar.google.com/...", "google_auth_token": "token_for_sarah" } } }] }] }, "options": {} }, "id": "88d2f281-e8e6-4e8a-9d0a-9ad85e8750c2", "name": "User Database", "type": "n8n-nodes-base.set", "typeVersion": 2, "position": [260, 0] }
   ],
   "connections": {
     "Daily Kickoff": { "main": [[{ "node": "User Database", "type": "main", "index": 0 }]] },
-    "tool-get_calendar_events": { "main": [], "tool": [[{ "node": "Dungeon Master Agent", "type": "tool", "index": 1 }]] },
-    "tool-create_calendar_event": { "main": [], "tool": [[{ "node": "Dungeon Master Agent", "type": "tool", "index": 2 }]] },
-    "tool-get_news": { "main": [], "tool": [[{ "node": "Dungeon Master Agent", "type": "tool", "index": 3 }]] },
-    "tool-research_agent": { "main": [], "tool": [[{ "node": "Dungeon Master Agent", "type": "tool", "index": 4 }]] },
-    "User Database": { "main": [[{ "node": "Dungeon Master Agent", "type": "main", "index": 0 }]] }
+    "tool-get_calendar_events": { "main": [], "tool": [[{ "node": "Saga Core Agent", "type": "tool", "index": 1 }]] },
+    "tool-create_calendar_event": { "main": [], "tool": [[{ "node": "Saga Core Agent", "type": "tool", "index": 2 }]] },
+    "tool-get_news": { "main": [], "tool": [[{ "node": "Saga Core Agent", "type": "tool", "index": 3 }]] },
+    "tool-research_agent": { "main": [], "tool": [[{ "node": "Saga Core Agent", "type": "tool", "index": 4 }]] },
+    "User Database": { "main": [[{ "node": "Saga Core Agent", "type": "main", "index": 0 }]] }
   }
 };
 
 // Simplified workflow for the new Onboarding Agent
 const ONBOARDING_AGENT: Workflow = {
-    "name": "Agent - Onboarding",
+    "name": "Saga - Onboarding",
     "id": "agent-onboarding",
     "nodes": [
         { "id": "trigger-onboarding", "name": "API Trigger", "type": "n8n-nodes-base.executeWorkflowTrigger", "typeVersion": 1, "position": [200, 300], "parameters": {} },
@@ -165,15 +165,15 @@ const ONBOARDING_AGENT: Workflow = {
     }
 };
 
-const TOOL_SCRIBE_ASSISTANT: Workflow = {
-  "name": "Tool - Scribe's Assistant",
+const MODULE_SUMMARIZER: Workflow = {
+  "name": "Module - Summarizer",
   "id": "tool-scribe-assistant",
   "meta": { "description": "Receives a topic, finds source material online, and summarizes it using a Gemini model." },
   "nodes": [
     {
       "parameters": { "notes": "Receives a { 'topic': '...' } to summarize." },
       "id": "scribe-trigger",
-      "name": "Scribe Request",
+      "name": "Summarization Request",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1,
       "position": [100, 300]
@@ -189,7 +189,7 @@ const TOOL_SCRIBE_ASSISTANT: Workflow = {
     {
       "parameters": { "toolType": "webBrowser", "url": "={{ $('Find Source Material').item.json.link }}", "options": {"mode": "text"}},
       "id": "scribe-read",
-      "name": "Read Papyrus",
+      "name": "Read Source Text",
       "type": "@n8n/n8n-nodes-langchain.tool",
       "typeVersion": 1,
       "position": [600, 300]
@@ -197,15 +197,15 @@ const TOOL_SCRIBE_ASSISTANT: Workflow = {
     {
       "parameters": { "model": "gemini-pro", "prompt": "Summarize the following text for a scholar: {{$json.text}}" },
       "id": "scribe-summarize",
-      "name": "Gemini Scribe",
+      "name": "Gemini Summarizer",
       "type": "@google/n8n-nodes-gemini.chat",
       "typeVersion": 1,
       "position": [850, 300]
     },
     {
-      "parameters": { "functionCode": "return { json: { scroll_text: items[0].json.summary } }" },
+      "parameters": { "functionCode": "return { json: { summary_text: items[0].json.summary } }" },
       "id": "scribe-format",
-      "name": "Format for Scroll",
+      "name": "Format Summary",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [1100, 300],
@@ -213,20 +213,20 @@ const TOOL_SCRIBE_ASSISTANT: Workflow = {
     }
   ],
   "connections": {
-    "Scribe Request": { "main": [[{ "node": "Find Source Material", "type": "main", "index": 0 }]] },
-    "Find Source Material": { "main": [[{ "node": "Read Papyrus", "type": "main", "index": 0 }]] },
-    "Read Papyrus": { "main": [[{ "node": "Gemini Scribe", "type": "main", "index": 0 }]] },
-    "Gemini Scribe": { "main": [] }
+    "Summarization Request": { "main": [[{ "node": "Find Source Material", "type": "main", "index": 0 }]] },
+    "Find Source Material": { "main": [[{ "node": "Read Source Text", "type": "main", "index": 0 }]] },
+    "Read Source Text": { "main": [[{ "node": "Gemini Summarizer", "type": "main", "index": 0 }]] },
+    "Gemini Summarizer": { "main": [] }
   }
 };
 
 
 export const WORKFLOWS: Workflow[] = [
-  AGENT_DAILY_SCHEDULER,
+  SAGA_CORE_AGENT,
   GET_CALENDAR_STATE,
-  TOOL_RESEARCH_AGENT,
-  TOOL_SCRIBE_ASSISTANT,
-  TOOL_CREATE_CALENDAR_EVENT,
-  TOOL_GET_NEWS,
+  MODULE_RESEARCH_AGENT,
+  MODULE_SUMMARIZER,
+  MODULE_CREATE_CALENDAR_EVENT,
+  MODULE_GET_NEWS,
   ONBOARDING_AGENT
 ];

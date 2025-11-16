@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import type { Workflow } from '../types';
 import { Cog6ToothIcon, PlayIcon, InformationCircleIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
@@ -21,7 +20,7 @@ const InputField: React.FC<{
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }> = ({ field, value, onChange }) => (
     <div>
-        <label htmlFor={field.name} className="block text-sm font-medium text-gray-300 mb-1">{field.label}</label>
+        <label htmlFor={field.name} className="block text-sm font-medium text-gray-300 mb-1.5">{field.label}</label>
         <input
             type={field.type}
             name={field.name}
@@ -30,7 +29,7 @@ const InputField: React.FC<{
             onChange={onChange}
             placeholder={field.placeholder}
             defaultValue={field.defaultValue}
-            className="w-full bg-gray-900/70 border border-gray-600 rounded-lg p-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition"
+            className="w-full bg-gray-900/70 border border-white/10 rounded-lg p-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition"
         />
     </div>
 );
@@ -111,13 +110,13 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({ workflow }) => {
     return (
         <div className="p-4 sm:p-6 lg:p-8">
             <header className="mb-8">
-                <h2 className="text-3xl font-bold text-white font-orbitron">Tool Invocation</h2>
-                <p className="text-gray-400">Manually execute a workflow tool with specific inputs.</p>
+                <h2 className="text-3xl font-bold text-white font-orbitron">Module Execution</h2>
+                <p className="text-gray-400">Manually execute a workflow module with specific inputs.</p>
             </header>
 
-            <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50">
-                <div className="flex items-center mb-4 pb-4 border-b border-gray-700">
-                     <div className="w-10 h-10 bg-gradient-to-br from-cyan-600 to-blue-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+            <div className="glass-pane rounded-xl p-6">
+                <div className="flex items-center mb-4 pb-4 border-b border-white/10">
+                     <div className="w-10 h-10 bg-gradient-to-br from-cyan-600 to-blue-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0 ring-1 ring-white/10">
                          <Cog6ToothIcon className="w-6 h-6 text-white"/>
                      </div>
                      <div>
@@ -133,19 +132,19 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({ workflow }) => {
                                 <InputField key={field.name} field={field} value={formData[field.name]} onChange={handleInputChange} />
                             ))}
                         </div>
-                         <button type="submit" disabled={isLoading} className="mt-6 w-full flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md text-white bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-cyan-500">
+                         <button type="submit" disabled={isLoading} className="mt-6 w-full flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md text-white bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500">
                             {isLoading ? (
                                 <>
                                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    Executing...
+                                    Processing...
                                 </>
                             ) : (
                                 <>
                                     <PlayIcon className="w-5 h-5 mr-2" />
-                                    Execute Tool
+                                    Execute Module
                                 </>
                             )}
                         </button>
@@ -153,32 +152,32 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({ workflow }) => {
                 ) : (
                     <div className="text-center py-8 bg-gray-900/50 rounded-lg">
                         <InformationCircleIcon className="w-10 h-10 mx-auto text-blue-400 mb-2" />
-                        <p className="text-gray-300">This tool is not configured for manual execution.</p>
-                        <p className="text-xs text-gray-500">It is likely triggered by another agent or process.</p>
+                        <p className="text-gray-300">This module is not configured for manual execution.</p>
+                        <p className="text-xs text-gray-500">It is likely activated by another agent or process.</p>
                     </div>
                 )}
             </div>
 
             {(isLoading || result) && (
                  <div className="mt-6">
-                    <h3 className="text-lg font-semibold text-gray-300 mb-2">Execution Log</h3>
-                    <div className="bg-gray-900/80 rounded-xl p-4 border border-gray-700/50 min-h-[100px]">
+                    <h3 className="text-lg font-semibold text-gray-300 mb-2 font-orbitron">Execution Log</h3>
+                    <div className="glass-pane rounded-xl p-4 min-h-[100px]">
                         {isLoading && (
                             <div className="flex items-center text-gray-400">
                                <svg className="animate-spin mr-3 h-5 w-5 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
-                                <span>Awaiting response from the forge...</span>
+                                <span>Awaiting network response...</span>
                             </div>
                         )}
                         {result && (
-                            <div>
+                            <div className="fade-in-up">
                                 <div className="flex items-center text-green-400 mb-2">
                                     <CheckCircleIcon className="w-5 h-5 mr-2" />
                                     <span className="font-bold">Execution Complete</span>
                                 </div>
-                                <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono">{result}</pre>
+                                <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono bg-black/20 p-3 rounded-md">{result}</pre>
                             </div>
                         )}
                     </div>

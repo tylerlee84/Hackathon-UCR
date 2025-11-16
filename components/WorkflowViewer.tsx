@@ -84,8 +84,8 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({ workflow }) => {
   };
 
   return (
-    <div className="w-full h-full overflow-hidden bg-gray-900/50 relative">
-      <div className="absolute top-4 left-4 bg-gray-900/80 p-3 rounded-lg border border-gray-700 z-10">
+    <div className="w-full h-full overflow-hidden bg-transparent relative">
+      <div className="absolute top-4 left-4 glass-pane p-3 rounded-lg z-10">
         <h2 className="text-xl font-bold font-orbitron text-white">{workflow.name}</h2>
         <p className="text-sm text-gray-400">Nodes: {workflow.nodes.length}</p>
       </div>
@@ -101,7 +101,7 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({ workflow }) => {
       >
         <defs>
             <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="8" refY="3.5" orient="auto">
-                <polygon points="0 0, 10 3.5, 0 7" className="fill-current text-gray-500" />
+                <polygon points="0 0, 10 3.5, 0 7" className="fill-current text-purple-400" />
             </marker>
         </defs>
         {/* Fix: Use Object.keys to iterate over connections to ensure connData is correctly typed. */}
@@ -110,10 +110,11 @@ export const WorkflowViewer: React.FC<WorkflowViewerProps> = ({ workflow }) => {
           if (!sourceNode) return null;
           
           const connData = workflow.connections[sourceName];
-          // FIX: Refactor flattening logic using reduce for more robust type inference, resolving issues with .flat() in some TS environments.
-          const allConnections = [...(connData.main || []), ...(connData.tool || [])].reduce<ConnectionNode[]>((acc, val) => acc.concat(val), []);
+          // FIX: The original `reduce` logic to flatten connections can be tricky for TypeScript's type inference, leading to an `unknown` type. Using `.flat()` is more modern and has better type support.
+          const allConnections = [...(connData.main || []), ...(connData.tool || [])].flat();
 
-          return allConnections.map((target, index) => {
+          // FIX: Explicitly type `target` as `ConnectionNode` to correct type inference issues with `.flat()` that can lead to an `unknown` type.
+          return allConnections.map((target: ConnectionNode, index) => {
             const targetNode = nodeMap.get(target.node);
             if (!targetNode) return null;
             return (

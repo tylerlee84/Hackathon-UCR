@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { Node } from '../types';
 
@@ -27,21 +26,41 @@ export const Connection: React.FC<ConnectionProps> = ({ source, target }) => {
 
   const pathData = `M ${startX},${startY} C ${controlPointX1},${controlPointY1} ${controlPointX2},${controlPointY2} ${endX},${endY}`;
 
+  const uniqueId = `grad-${source.id}-${target.id}`;
+
   return (
-    <g>
+    <g style={{'--path-length': 1000}}>
+      <defs>
+        <linearGradient id={uniqueId} x1={startX} y1={startY} x2={endX} y2={endY} gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#60a5fa" />
+          <stop offset="100%" stopColor="#c084fc" />
+        </linearGradient>
+      </defs>
       <path
         d={pathData}
-        className="stroke-gray-600 stroke-2 fill-none"
+        className="stroke-gray-700/50"
+        strokeWidth="6"
+        fill="none"
       />
       <path
         d={pathData}
-        className="stroke-gray-700/50 stroke-[8px] fill-none"
-      />
-      <path
-        d={pathData}
+        stroke={`url(#${uniqueId})`}
+        strokeWidth="1.5"
+        fill="none"
         markerEnd="url(#arrowhead)"
-        className="stroke-gray-500 stroke-2 fill-none"
+        strokeDasharray="10 5"
+        className="animate-flow"
       />
+      <style>{`
+        @keyframes flow {
+          to {
+            stroke-dashoffset: -20;
+          }
+        }
+        .animate-flow {
+          animation: flow 1s linear infinite;
+        }
+      `}</style>
     </g>
   );
 };
